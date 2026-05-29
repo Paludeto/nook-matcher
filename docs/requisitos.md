@@ -53,7 +53,7 @@ Jogador de Animal Crossing quer ver os detalhes dos villagers que o sistema reco
 
 ### História 2 — Prioridade Alta
 
-Jogador de Animal Crossing quer inserir no sistema um arquivo com suas preferências e de outros amigos e receber em uma única execução as recomendações de villagers para cada um deles, sem fazer jogador por jogador.
+Jogador de Animal Crossing quer inserir no sistema um arquivo com suas preferências e de outros amigos para receber em uma única execução as recomendações de villagers para cada um deles, sem fazer jogador por jogador.
 
 **Critérios de aceitação:**
 
@@ -91,10 +91,9 @@ Jogador de Animal Crossing quer que cada villager recomendado venha acompanhado 
 ### Ambiguidades
 
 - **A1 — "Aparência" (História 1) não está operacionalizada.** Inclui imagem do villager ou apenas descrição textual (espécie + cor)?
-- **A2 — Histórias 1 e 5 dizem quase a mesma coisa.** "Características fornecidas pelo usuário que influenciaram a recomendação" (H1) ≈ "fatores que contribuíram para a recomendação" (H5). Ou são funcionalidades sobrepostas (redundância), ou são diferentes mas a distinção não está clara.
-- **A3 — "Arquivo" (Histórias 2 e 4) sem formato definido.** CSV? Excel? JSON?
-- **A4 — "Mesma configuração" (História 4) é vago.** Quais parâmetros contam? Seed aleatória, hiperparâmetros, versão do dataset, versão do modelo? Sem isso, não dá para testar reprodutibilidade.
-- **A5 — "Principais fatores" (História 5) sem critério de corte.** Quantos fatores aparecem? Top 3, todos com peso acima de X, todos?
+- **A2 — "Arquivo" (Histórias 2 e 4) sem formato definido.** CSV? Excel? JSON?
+- **A3 — "Mesma configuração" (História 4) é vago.** Quais parâmetros contam? Seed aleatória, hiperparâmetros, versão do dataset, versão do modelo? Sem isso, não dá para testar reprodutibilidade.
+- **A4 — "Principais fatores" (História 5) sem critério de corte.** Quantos fatores aparecem? Top 3, todos com peso acima de X, todos?
 
 ### Conflitos
 
@@ -102,6 +101,7 @@ Jogador de Animal Crossing quer que cada villager recomendado venha acompanhado 
 - **C2 — Histórias 1 e 5 restringem a escolha do modelo.** Gerar justificativas legíveis é trivial para modelos baseados em regras ou similaridade (KNN, cosseno), mas custoso para modelos black-box (redes profundas).
 - **C3 — História 3 (preferências parciais) vs. História 4 (reprodutibilidade).** Se campo vazio vira "sem preferência" e o modelo preenche a lacuna com algum mecanismo (média, default, amostragem), esse mecanismo precisa ser determinístico, caso contrário, dois arquivos idênticos podem gerar saídas diferentes, violando a H4.
 - **C4 — "Cor preferida" do jogador (História 2) vs. policromia dos villagers.** Casar uma cor única do jogador com villagers que têm várias cores depende da decisão tomada em A1.
+- **C5 — Histórias 1 e 5 dizem quase a mesma coisa.** "Características fornecidas pelo usuário que influenciaram a recomendação" (H1) ≈ "fatores que contribuíram para a recomendação" (H5). Ou são funcionalidades sobrepostas (redundância), ou são diferentes mas a distinção não está clara.
 
 ### Questões em aberto
 
