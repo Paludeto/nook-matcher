@@ -50,6 +50,7 @@ Jogador de Animal Crossing quer ver os detalhes dos villagers que o sistema reco
 
 - Cada recomendação de villager deve exibir nome, espécie, cor, tipo de personalidade, hobby e aniversário.
 - A recomendação também deve mostrar quais características fornecidas pelo usuário influenciaram na recomendação.
+- As recomendações são apresentadas em ordem decrescente de compatibilidade, com a porcentagem de compatibilidade visível ao lado de cada villager.
 
 ### História 2 — Prioridade Alta
 
@@ -59,6 +60,8 @@ Jogador de Animal Crossing quer inserir no sistema um arquivo com suas preferên
 
 - O sistema aceita um arquivo com colunas mínimas: identificador do jogador, personalidade preferida, espécie preferida, hobby preferido e cor preferida.
 - A saída associa cada jogador à sua lista de villagers recomendados.
+- As colunas são identificadas pelo cabeçalho e não pela posição, seu houver colunas extras ou desconhecidas elas serão ignoradas sem causar falha.
+- Se houver alguma linha com informações cruciais faltantes (sem identificador ou sem cabeçalho), o sistema reporta a linha com erro e segue processando os demais jogadores válidos.
 
 ### História 3 — Prioridade Média
 
@@ -67,6 +70,7 @@ Jogador de Animal Crossing quer que o sistema lide com preferências parciais no
 **Critérios de aceitação:**
 
 - O programa trata os campos vazios como "sem preferência" e gera as recomendações apenas com base nos eixos preenchidos.
+- Caso todos os campos estiverem vazios, retorna villagers aleatórios e sinaliza que nenhuma preferência foi utilizada.
 
 ### História 4 — Prioridade Baixa
 
@@ -75,6 +79,7 @@ Jogador quer que o sistema produza as mesmas recomendações ao processar o mesm
 **Critérios de aceitação:**
 
 - Com o mesmo arquivo de entrada e a mesma configuração, a saída é idêntica entre execuções consecutivas.
+- Qualquer componente aleatório (desempate, amostragem) utiliza uma seed fixa registrada na configuração.
 
 ### História 5 — Prioridade Média
 
@@ -83,7 +88,8 @@ Jogador de Animal Crossing quer que cada villager recomendado venha acompanhado 
 **Critérios de aceitação:**
 
 - Para cada villager recomendado, a saída exibe os principais fatores que contribuíram para a recomendação.
-
+- O número de fatores exibidos é fixo e definido em configuração.
+  
 ---
 
 ## 4. Registro de Validação
@@ -91,21 +97,19 @@ Jogador de Animal Crossing quer que cada villager recomendado venha acompanhado 
 ### Ambiguidades
 
 - **A1 — "Aparência" (História 1) não está operacionalizada.** Inclui imagem do villager ou apenas descrição textual (espécie + cor)?
-- **A2 — "Arquivo" (Histórias 2 e 4) sem formato definido.** CSV? Excel? JSON?
-- **A3 — "Mesma configuração" (História 4) é vago.** Quais parâmetros contam? Seed aleatória, hiperparâmetros, versão do dataset, versão do modelo? Sem isso, não dá para testar reprodutibilidade.
-- **A4 — "Principais fatores" (História 5) sem critério de corte.** Quantos fatores aparecem? Top 3, todos com peso acima de X, todos?
+- **A2 — "Arquivo" (Histórias 2 e 4) sem formato definido.** CSV? Excel? JSON? _Revisão: CSV será utilizado_ 
+- **A3 — "Principais fatores" (História 5) sem critério de corte.** Quantos fatores aparecem? Top 3, todos com peso acima de X, todos?
 
 ### Conflitos
 
 - **C1 — História 1 (display detalhado) vs. História 2 (saída em arquivo batch).** A História 1 sugere uma exibição rica ("exibir nome, espécie, cor, personalidade, hobby, aniversário, fatores de match"). A História 2 diz que a saída é um arquivo associando jogador a recomendações. Como conciliar? O arquivo terá todas essas colunas? Haverá camada separada de visualização?
-- **C2 — Histórias 1 e 5 restringem a escolha do modelo.** Gerar justificativas legíveis é trivial para modelos baseados em regras ou similaridade (KNN, cosseno), mas custoso para modelos black-box (redes profundas).
-- **C3 — História 3 (preferências parciais) vs. História 4 (reprodutibilidade).** Se campo vazio vira "sem preferência" e o modelo preenche a lacuna com algum mecanismo (média, default, amostragem), esse mecanismo precisa ser determinístico, caso contrário, dois arquivos idênticos podem gerar saídas diferentes, violando a H4.
-- **C4 — "Cor preferida" do jogador (História 2) vs. policromia dos villagers.** Casar uma cor única do jogador com villagers que têm várias cores depende da decisão tomada em A1.
-- **C5 — Histórias 1 e 5 dizem quase a mesma coisa.** "Características fornecidas pelo usuário que influenciaram a recomendação" (H1) ≈ "fatores que contribuíram para a recomendação" (H5). Ou são funcionalidades sobrepostas (redundância), ou são diferentes mas a distinção não está clara.
+- **C2 — Histórias 1 e 5 restringem a escolha do modelo.** Gerar justificativas legíveis é trivial para modelos baseados em regras ou similaridade (KNN, cosseno), mas custoso para modelos black-box (redes profundas). _Revisão: KNN será utilizado_ 
+- **C3 — "Cor preferida" do jogador (História 2) vs. policromia dos villagers.** Casar uma cor única do jogador com villagers que têm várias cores depende da decisão tomada em A1.
+- **C4 — Histórias 1 e 5 dizem quase a mesma coisa.** "Características fornecidas pelo usuário que influenciaram a recomendação" (H1) ≈ "fatores que contribuíram para a recomendação" (H5). Ou são funcionalidades sobrepostas (redundância), ou são diferentes mas a distinção não está clara.
 
 ### Questões em aberto
 
-- **Q1 —** Qual é a fonte de dados dos villagers (nome, espécie, cor, personalidade, hobby, aniversário)? Nookipedia (API)? Dataset custom construído pela equipe?
+- **Q1 —** Qual é a fonte de dados dos villagers (nome, espécie, cor, personalidade, hobby, aniversário)? Nookipedia (API)? Dataset custom construído pela equipe? _Revisão: CSV de villagers da Nookpedia será utilizado._ 
 - **Q2 —** Formato e estrutura exata dos arquivos de entrada e saída (quais colunas? cabeçalho obrigatório? separador?).
 - **Q3 —** Quantas recomendações por jogador? Top 5, top 10, configurável?
 - **Q4 —** Caso extremo: o que o sistema faz quando *todos* os campos de preferência de um jogador estão vazios (História 3)?
