@@ -1,4 +1,5 @@
 # NookMatcher — Arquitetura, Padrões de Codificação e Padrões de Projeto
+
 ---
 
 ## 1. Padrões de Codificação e Qualidade
@@ -56,14 +57,12 @@ arquivos) e **cobertura** via `coverage` sobre a execução do `unittest`.
 
 ## 2. Arquitetura em Camadas
 
-Quatro camadas com **dependência apontando para dentro**: camadas externas conhecem
-as internas, nunca o contrário. O domínio não importa nada de I/O.
+A **Aplicação** coordena o fluxo: ela usa o **Domínio** (algoritmo) e a
+**Infraestrutura** (I/O de CSV). O **Domínio** é puro — não realiza I/O e não depende
+da Infraestrutura; recebe os dados já carregados pela Aplicação. Isso mantém o
+algoritmo testável e independente do formato de armazenamento.
 
 ![Arquitetura em camadas do NookMatcher](arquitetura-camadas.svg)
-
-> A camada de **Aplicação** também consome a **Infraestrutura** (leitura/escrita de
-> CSV); a seta tracejada indica a **inversão de dependência**: a Infraestrutura
-> implementa interfaces definidas no Domínio.
 
 ### Responsabilidades
 
@@ -134,7 +133,7 @@ contribuição de cada eixo, que o `ExplanationBuilder` converte nos fatores exi
 
 ### 3.2 Repository — acesso a dados
 
-O domínio não pode depender de CSV no futuro. A fonte de villagers é hoje um CSV da Nookipedia
+O domínio não pode depender de CSV. A fonte de villagers é hoje um CSV da Nookipedia
 (Q1) e pode virar API. A leitura de jogadores mapeia colunas por cabeçalho, ignora
 colunas extras e reporta linhas inválidas sem abortar o lote (H2).
 
