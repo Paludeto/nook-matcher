@@ -17,7 +17,6 @@ PEP 257), com type hints (PEP 484) na fronteira pública.
 - Nomenclatura: `snake_case` para módulos, funções, métodos e variáveis;
   `PascalCase` para classes e exceções; `UPPER_SNAKE_CASE` para constantes;
   prefixo `_` para nomes não exportados.
-- Type hints (PEP 484) na fronteira pública de cada módulo.
 
 ### 1.2 Docstrings (formato Google)
 
@@ -26,7 +25,9 @@ Toda função/classe pública leva docstring: linha-resumo no imperativo, depois
 tipo entre parênteses; a assinatura também leva type hints (PEP 484).
 
 ```python
-def recommend(self, profile: PlayerProfile, top_n: int) -> list[Recommendation]:
+def recommend(
+    self, profile: PlayerProfile, top_n: int
+) -> list[Recommendation]:
     """Ranqueia villagers por compatibilidade, em ordem decrescente.
 
     Args:
@@ -69,14 +70,15 @@ algoritmo testável e independente do formato de armazenamento.
 | Camada | Responsabilidade | Não pode |
 |--------|------------------|----------|
 | Apresentação | Ler argumentos, disparar o caso de uso, formatar mensagens. | Conter regra de recomendação. |
-| Aplicação | Orquestrar o fluxo batch, iterar jogadores, coletar erros por linha (H2). | Conhecer CSV ou o algoritmo. |
+| Aplicação | Orquestrar o fluxo batch, iterar jogadores, coletar erros por linha (H2). | Implementar a regra de recomendação ou fazer parsing de CSV. |
 | Domínio | Entidades, KNN, similaridade, justificativas (H1/H5), determinismo (H4). | Tocar disco ou rede. |
 | Infraestrutura | Ler/escrever CSV por cabeçalho, ignorar colunas extras, carregar config. | Conter regra de negócio. |
 
 ### Trade-offs
 
-- **Domínio isolado de I/O** (custo: mais interfaces). Justificado por H4
-  (determinismo) e testabilidade — o recomendador roda sem CSV.
+- **Domínio isolado de I/O.** Justificado por testabilidade e separação de
+  responsabilidades: o recomendador roda sem CSV, com a Aplicação fornecendo os
+  dados já carregados. Determinismo (H4) é tratado à parte, via seed.
 - **CSV como contrato fixo** (A2/Q1). Simples e alinhado à Nookipedia; menos flexível
   que API, mitigado pelo Repository (§3.2).
 - **Content-based KNN** (C2). Torna as justificativas (H1/H5) triviais de gerar; abre
@@ -113,9 +115,9 @@ classDiagram
     }
     class KNNRecommender {
         -strategy: SimilarityStrategy
-        -k: int
+        -villagers: list~Villager~
         -seed: int
-        +recommend(profile, villagers, top_n) list~Recommendation~
+        +recommend(profile, top_n) list~Recommendation~
     }
     class ScoreResult {
         +value: float
@@ -133,9 +135,9 @@ contribuição de cada eixo, que o `ExplanationBuilder` converte nos fatores exi
 
 ### 3.2 Repository — acesso a dados
 
-O domínio não pode depender de CSV. A fonte de villagers é hoje um CSV da Nookipedia
-(Q1) e pode virar API. A leitura de jogadores mapeia colunas por cabeçalho, ignora
-colunas extras e reporta linhas inválidas sem abortar o lote (H2).
+A Aplicação não deve lidar com detalhes de CSV. A fonte de villagers é hoje um CSV da
+Nookipedia (Q1) e pode virar API. A leitura de jogadores mapeia colunas por cabeçalho,
+ignora colunas extras e reporta linhas inválidas sem abortar o lote (H2).
 
 Módulos: `infrastructure/repositories.py`, `infrastructure/player_source.py`.
 
