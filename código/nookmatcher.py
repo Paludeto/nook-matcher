@@ -1,8 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-NookMatcher - leitura da entrada
-===============================================
+"""NookMatcher - leitura da entrada (demo simples).
+
+Le o CSV de jogadores e imprime uma tabela com cada jogador e suas
+preferencias. Sem recomendacao ainda.
+
+  - Colunas localizadas pelo CABECALHO (a ordem nao importa); colunas extras
+    sao ignoradas.
+  - 'ID do jogador' é obrigatorio: linhas sem ID sao reportadas e puladas.
+  - Campos vazios = "sem preferencia" (exibidos como '-').
+
 Uso:
     python nookmatcher.py --input jogadores_exemplo.csv
 """
@@ -18,7 +25,22 @@ COLS = [PLAYER_ID_COL, "Gender", "Personality", "Style 1", "Style 2",
 
 
 def load_players(path):
-    """Le o CSV e devolve (lista_de_jogadores, lista_de_erros)."""
+    """Le o CSV de jogadores, localizando as colunas pelo cabecalho.
+
+    Colunas extras sao ignoradas e linhas sem 'ID do jogador' sao reportadas
+    e puladas, sem interromper o processamento das demais.
+
+    Args:
+        path (str): Caminho do arquivo CSV de jogadores.
+
+    Returns:
+        tuple[list[dict], list[str]]: A lista de jogadores (cada um um dict
+        com as colunas de COLS) e a lista de mensagens de erro por linha
+        invalida.
+
+    Raises:
+        ValueError: Se a coluna 'ID do jogador' estiver ausente no cabecalho.
+    """
     with open(path, encoding="utf-8-sig", newline="") as f:
         reader = csv.DictReader(f)
         headers = reader.fieldnames or []
@@ -39,11 +61,27 @@ def load_players(path):
 
 
 def print_table(players):
-    """Imprime os jogadores como tabela alinhada (vazio = '-')."""
+    """Imprime os jogadores como uma tabela de texto alinhada.
+
+    Cada coluna e dimensionada pelo maior valor presente; celulas vazias sao
+    exibidas como '-'.
+
+    Args:
+        players (list[dict]): Jogadores a exibir, conforme devolvido por
+            load_players.
+    """
     grid = [COLS] + [[(p[c] or "-") for c in COLS] for p in players]
     widths = [max(len(r[j]) for r in grid) for j in range(len(COLS))]
 
     def line(cells):
+        """Formata uma linha da tabela com as colunas alinhadas.
+
+        Args:
+            cells (list[str]): Valores ja resolvidos para cada coluna.
+
+        Returns:
+            str: A linha formatada.
+        """
         return " | ".join(c.ljust(widths[j]) for j, c in enumerate(cells))
 
     print(line(COLS))
@@ -53,6 +91,12 @@ def print_table(players):
 
 
 def main(argv=None):
+    """Ponto de entrada: le o CSV informado e imprime a tabela de jogadores.
+
+    Args:
+        argv (list[str] | None): Argumentos de linha de comando; None usa
+            sys.argv.
+    """
     parser = argparse.ArgumentParser(
         description="NookMatcher - leitura da entrada (tabela de jogadores)")
     parser.add_argument("--input", required=True, help="CSV de jogadores")
