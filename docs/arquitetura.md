@@ -74,19 +74,6 @@ algoritmo testável e independente do formato de armazenamento.
 | Domínio | Entidades, KNN, similaridade, justificativas (H1/H5), determinismo (H4). | Tocar disco ou rede. |
 | Infraestrutura | Ler/escrever CSV por cabeçalho, ignorar colunas extras, carregar config. | Conter regra de negócio. |
 
-### Trade-offs
-
-- **Domínio isolado de I/O.** Justificado por testabilidade e separação de
-  responsabilidades: o recomendador roda sem CSV, com a Aplicação fornecendo os
-  dados já carregados. Determinismo (H4) é tratado à parte, via seed.
-- **CSV como contrato fixo** (A2/Q1). Simples e alinhado à Nookipedia; menos flexível
-  que API, mitigado pelo Repository (§3.2).
-- **Content-based KNN** (C2). Torna as justificativas (H1/H5) triviais de gerar; abre
-  mão de qualidade preditiva de modelos complexos, irrelevante aqui.
-- **Ressalva:** o pitch cita filtragem colaborativa, mas nenhuma história nem o CSV
-  fornecem matriz usuário–item. O núcleo é content-based; colaborativo fica como
-  evolução futura, fora do esqueleto.
-
 ---
 
 ## 3. Padrões de Projeto
