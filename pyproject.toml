@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nook-matcher"
+version = "0.1.0"
+description = "Recomendador de villagers de Animal Crossing: New Horizons."
+readme = "README.md"
+requires-python = ">=3.10"
+
+[project.scripts]
+nookmatcher = "nook_matcher.presentation.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.black]
+line-length = 79
+
+[tool.coverage.run]
+source = ["nook_matcher"]
+branch = true

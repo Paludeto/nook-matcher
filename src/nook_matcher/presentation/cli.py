@@ -3,6 +3,7 @@
 
 import argparse
 import sys
+from datetime import datetime
 from pathlib import Path
 
 from nook_matcher.application.batch_service import (
@@ -10,6 +11,9 @@ from nook_matcher.application.batch_service import (
 )
 from nook_matcher.domain.recommender import KNNRecommender
 from nook_matcher.domain.similarity import WeightedOverlapSimilarity
+from nook_matcher.infrastructure.output_writer import (
+    CsvRecommendationWriter,
+)
 from nook_matcher.infrastructure.player_source import (
     CsvPlayerProfileReader,
 )
@@ -17,13 +21,11 @@ from nook_matcher.infrastructure.repositories import (
     CsvVillagerRepository,
 )
 
-
 _DEFAULT_TOP_N = 10
 _DEFAULT_SEED = 42
 _DEFAULT_MAX_FACTORS = 3
-_DEFAULT_VILLAGERS = (
-    Path(__file__).parents[3] / "data" / "villagers.csv"
-)
+_DEFAULT_OUTPUT_DIR = "output"
+_DEFAULT_VILLAGERS = Path(__file__).parents[3] / "data" / "villagers.csv"
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -79,7 +81,43 @@ def _build_parser() -> argparse.ArgumentParser:
             f"(padrão: {_DEFAULT_MAX_FACTORS})."
         ),
     )
+    parser.add_argument(
+        "--output",
+        metavar="CSV",
+        help=(
+            "Caminho do CSV de saída. Se omitido, gera "
+            f"{_DEFAULT_OUTPUT_DIR}/recomendacoes_<timestamp>.csv."
+        ),
+    )
+    parser.add_argument(
+        "--output-dir",
+        default=_DEFAULT_OUTPUT_DIR,
+        metavar="DIR",
+        help=(
+            "Pasta do CSV quando --output não é informado "
+            f"(padrão: {_DEFAULT_OUTPUT_DIR})."
+        ),
+    )
     return parser
+
+
+def _resolve_output_path(args: argparse.Namespace) -> Path:
+    """Determina o caminho do CSV de saída a partir dos argumentos.
+
+    Usa ``--output`` quando informado; caso contrário, gera um nome com
+    timestamp dentro de ``--output-dir`` para preservar execuções
+    anteriores.
+
+    Args:
+        args (argparse.Namespace): Argumentos já parseados.
+
+    Returns:
+        Path: Caminho do arquivo CSV a ser escrito.
+    """
+    if args.output:
+        return Path(args.output)
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    return Path(args.output_dir) / f"recomendacoes_{timestamp}.csv"
 
 
 def _format_recommendation(rank: int, rec, max_factors: int) -> str:
@@ -131,16 +169,13 @@ def _print_batch_result(batch_result, max_factors: int) -> None:
 
         print(f"\nJogador: {player_result.player_id}")
         print("-" * 40)
-        for rank, rec in enumerate(
-            player_result.recommendations, start=1
-        ):
+        for rank, rec in enumerate(player_result.recommendations, start=1):
             print(_format_recommendation(rank, rec, max_factors))
 
     total = batch_result.total_players
     errors = batch_result.total_errors
     print(
-        f"\n{total} jogador(es) processado(s), "
-        f"{errors} linha(s) com erro."
+        f"\n{total} jogador(es) processado(s), " f"{errors} linha(s) com erro."
     )
 
 
@@ -165,9 +200,7 @@ def main(argv: list[str] | None = None) -> None:
     if not input_path.exists():
         sys.exit(f"Arquivo de entrada não encontrado: {input_path}")
     if not villagers_path.exists():
-        sys.exit(
-            f"Arquivo de villagers não encontrado: {villagers_path}"
-        )
+        sys.exit(f"Arquivo de villagers não encontrado: {villagers_path}")
     if args.top_n <= 0:
         sys.exit("--top-n deve ser maior que zero.")
 
@@ -186,6 +219,11 @@ def main(argv: list[str] | None = None) -> None:
 
     batch_result = service.run(top_n=args.top_n)
     _print_batch_result(batch_result, max_factors=args.max_factors)
+
+    output_path = _resolve_output_path(args)
+    writer = CsvRecommendationWriter(output_path, max_factors=args.max_factors)
+    written = writer.write(batch_result)
+    print(f"\nRecomendações exportadas para: {written}")
 
 
 if __name__ == "__main__":
