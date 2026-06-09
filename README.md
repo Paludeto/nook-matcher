@@ -56,6 +56,26 @@ Exemplo com opções:
 nookmatcher --input data/jogadores_exemplo.csv --top-n 5 --output resultado.csv
 ```
 
+### Entendendo os parâmetros
+
+- **`--top-n`** — quantos villagers cada jogador recebe. O sistema calcula a
+  compatibilidade com todos os villagers, ordena do mais para o menos compatível e
+  devolve só os `N` primeiros. O padrão é `10` (limite de villagers de uma ilha). Não
+  altera o cálculo, apenas o tamanho da lista.
+
+- **`--max-factors`** — quantos motivos aparecem na justificativa de cada villager.
+  Cada recomendação explica *por que* casou com o jogador, listando os critérios que
+  bateram (personalidade, cor, hobby...) do mais para o menos relevante. Esta opção
+  corta essa lista: com `3`, mesmo que cinco critérios casem, só os três principais são
+  exibidos. Não altera o ranking, apenas o nível de detalhe da explicação.
+
+- **`--seed`** — torna os resultados reproduzíveis. A única parte aleatória do sistema
+  é o sorteio de villagers para jogadores que **não informaram nenhuma preferência**.
+  A *seed* é o número que controla esse sorteio: com a mesma seed, o mesmo arquivo gera
+  sempre a mesma saída. Trocar a seed muda quem é sorteado (mas continua reproduzível).
+  Para jogadores com preferências, a seed não faz diferença — o ranking deles já é
+  determinístico.
+
 ### Formato do arquivo de entrada
 
 Um único CSV com **uma linha por jogador**. As colunas são identificadas pelo
