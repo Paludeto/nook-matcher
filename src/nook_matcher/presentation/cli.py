@@ -17,13 +17,10 @@ from nook_matcher.infrastructure.repositories import (
     CsvVillagerRepository,
 )
 
-
 _DEFAULT_TOP_N = 10
 _DEFAULT_SEED = 42
 _DEFAULT_MAX_FACTORS = 3
-_DEFAULT_VILLAGERS = (
-    Path(__file__).parents[3] / "data" / "villagers.csv"
-)
+_DEFAULT_VILLAGERS = Path(__file__).parents[3] / "data" / "villagers.csv"
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -131,16 +128,13 @@ def _print_batch_result(batch_result, max_factors: int) -> None:
 
         print(f"\nJogador: {player_result.player_id}")
         print("-" * 40)
-        for rank, rec in enumerate(
-            player_result.recommendations, start=1
-        ):
+        for rank, rec in enumerate(player_result.recommendations, start=1):
             print(_format_recommendation(rank, rec, max_factors))
 
     total = batch_result.total_players
     errors = batch_result.total_errors
     print(
-        f"\n{total} jogador(es) processado(s), "
-        f"{errors} linha(s) com erro."
+        f"\n{total} jogador(es) processado(s), " f"{errors} linha(s) com erro."
     )
 
 
@@ -165,9 +159,7 @@ def main(argv: list[str] | None = None) -> None:
     if not input_path.exists():
         sys.exit(f"Arquivo de entrada não encontrado: {input_path}")
     if not villagers_path.exists():
-        sys.exit(
-            f"Arquivo de villagers não encontrado: {villagers_path}"
-        )
+        sys.exit(f"Arquivo de villagers não encontrado: {villagers_path}")
     if args.top_n <= 0:
         sys.exit("--top-n deve ser maior que zero.")
 
