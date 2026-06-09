@@ -15,6 +15,70 @@ Diante de tantas variáveis, encontrar villagers verdadeiramente compatíveis co
 
 Jogadores de Animal Crossing: New Horizons.
 
+## ⋆ Como usar
+
+### Instalação
+
+Requer **Python 3.10+**. Na raiz do projeto (de preferência em um ambiente virtual):
+
+```bash
+python -m venv .venv
+source .venv/bin/activate        # Windows: .venv\Scripts\activate
+pip install -e .
+```
+
+Isso registra o comando `nookmatcher`.
+
+### Execução
+
+```bash
+nookmatcher --input data/jogadores_exemplo.csv
+```
+
+A saída detalhada aparece no terminal e, **por padrão**, um arquivo CSV é gerado em
+`output/recomendacoes_<timestamp>.csv` associando cada jogador às suas recomendações.
+
+### Opções
+
+| Flag | Padrão | Descrição |
+|------|--------|-----------|
+| `--input` | *(obrigatório)* | CSV com os perfis dos jogadores. |
+| `--villagers` | `data/villagers.csv` | CSV do catálogo de villagers. |
+| `--top-n` | `10` | Quantidade de recomendações por jogador. |
+| `--seed` | `42` | Seed para resultados determinísticos. |
+| `--max-factors` | `3` | Quantos fatores de justificativa exibir por villager. |
+| `--output` | *(auto)* | Caminho do CSV de saída. |
+| `--output-dir` | `output` | Pasta do CSV quando `--output` não é informado. |
+
+Exemplo com opções:
+
+```bash
+nookmatcher --input data/jogadores_exemplo.csv --top-n 5 --output resultado.csv
+```
+
+### Formato do arquivo de entrada
+
+Um único CSV com **uma linha por jogador**. As colunas são identificadas pelo
+**cabeçalho** (aceita português e inglês, sem diferenciar acento ou maiúsculas) e
+colunas desconhecidas são ignoradas. Campos vazios são tratados como "sem preferência".
+
+Colunas reconhecidas: `ID do jogador` (obrigatória), `Personality`, `Species`,
+`Hobby`, `Color 1`, `Color 2`, `Style 1`, `Style 2`.
+
+```csv
+ID do jogador,Personality,Species,Hobby,Color 1,Color 2,Style 1,Style 2
+julia,Peppy,Squirrel,Fitness,Pink,White,Cute,Active
+gabriel,Cranky,,Music,Black,,Cool,
+```
+
+Linhas sem identificador são reportadas como erro, sem interromper o processamento dos
+demais jogadores.
+
+### Saída em CSV
+
+Uma linha por par jogador×villager, com as colunas: `jogador`, `posicao`, `villager`,
+`compatibilidade`, `especie`, `personalidade`, `hobby`, `cor`, `aniversario`, `fatores`.
+
 ## ⋆ Equipe
 
 | Nome | Função |
