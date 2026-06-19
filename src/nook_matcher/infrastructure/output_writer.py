@@ -93,3 +93,63 @@ class CsvRecommendationWriter:
             villager.birthday or "—",
             factors_str,
         ]
+
+
+class JsonRecommendationWriter:
+    """Grava o resultado do lote em um arquivo JSON."""
+
+    def __init__(self, path: str | Path, max_factors: int = 3) -> None:
+        """Inicializa o exportador.
+
+        Args:
+            path (str | Path): Caminho do arquivo JSON de saída.
+            max_factors (int): Número máximo de fatores por villager,
+                consistente com a exibição no terminal (H5).
+        """
+        self.path = Path(path)
+        self.max_factors = max_factors
+
+    def write(self, batch_result: BatchResult) -> Path:
+        """Escreve as recomendações no JSON, criando a pasta se preciso.
+
+        Args:
+            batch_result (BatchResult): Resultado do processamento.
+
+        Returns:
+            Path: Caminho do arquivo efetivamente escrito.
+        """
+        import json
+
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        output_data = []
+        for player in batch_result.results:
+            if player.error is not None:
+                continue
+            player_recs = []
+            for rank, rec in enumerate(player.recommendations, start=1):
+                villager = rec.villager
+                factors = rec.explanation[: self.max_factors]
+                player_recs.append(
+                    {
+                        "posicao": rank,
+                        "villager": villager.name,
+                        "compatibilidade": f"{rec.score * 100:.1f}%",
+                        "especie": villager.species,
+                        "personalidade": villager.personality,
+                        "hobby": villager.hobby,
+                        "cor": villager.color,
+                        "aniversario": villager.birthday or "—",
+                        "fatores": factors,
+                    }
+                )
+            output_data.append(
+                {
+                    "jogador": player.player_id,
+                    "recomendacoes": player_recs,
+                }
+            )
+
+        with self.path.open("w", encoding="utf-8") as handle:
+            json.dump(output_data, handle, ensure_ascii=False, indent=2)
+
+        return self.path

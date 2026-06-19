@@ -1,0 +1,71 @@
+[
+  {
+    "ID do jogador": "julia",
+    "Gender": "Female",
+    "Personality": "Peppy",
+    "Style 1": "Cute",
+    "Style 2": "Active",
+    "Hobby": "Fitness",
+    "Color 1": "Pink",
+    "Color 2": "White",
+    "Species": "Squirrel"
+  },
+  {
+    "ID do jogador": "gabriel",
+    "Gender": "Male",
+    "Personality": "Cranky",
+    "Style 1": "Cool",
+    "Style 2": "",
+    "Hobby": "Music",
+    "Color 1": "Black",
+    "Color 2": "",
+    "Species": "",
+    "null": [
+      ""
+    ]
+  },
+  {
+    "ID do jogador": "ana",
+    "Gender": "Female",
+    "Personality": "",
+    "Style 1": "",
+    "Style 2": "",
+    "Hobby": "",
+    "Color 1": "",
+    "Color 2": "",
+    "Species": ""
+  },
+  {
+    "ID do jogador": "",
+    "Gender": "",
+    "Personality": "Lazy",
+    "Style 1": "Simple",
+    "Style 2": "",
+    "Hobby": "Nature",
+    "Color 1": "Green",
+    "Color 2": "",
+    "Species": "Frog"
+  },
+  {
+    "ID do jogador": "pedro",
+    "Gender": "",
+    "Personality": "Smug",
+    "Style 1": "Elegant",
+    "Style 2": "Gorgeous",
+    "Hobby": "Fashion",
+    "Color 1": "Purple",
+    "Color 2": "Blue",
+    "Species": "Wolf"
+  },
+  {
+    "ID do jogador": "bruno",
+    "Gender": "Robot",
+    "Personality": "Funny",
+    "Style 1": "Cute",
+    "Style 2": "",
+    "Hobby": "Play",
+    "Color 1": "Rainbow",
+    "Color 2": "",
+    "Species": "Cat"
+  }
+]

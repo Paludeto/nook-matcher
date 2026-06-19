@@ -138,3 +138,107 @@ class CsvPlayerProfileReader(PlayerProfileReader):
             styles=styles,
         )
         return RowResult(source_line=line, profile=profile)
+
+
+class JsonPlayerProfileReader(PlayerProfileReader):
+    """Lê perfis de jogadores de um arquivo JSON."""
+
+    def __init__(self, path: str | Path) -> None:
+        """Inicializa o leitor com o caminho do JSON.
+
+        Args:
+            path (str | Path): Caminho do arquivo de jogadores.
+        """
+        self.path = Path(path)
+
+    def read(self) -> Iterator[RowResult]:
+        import json
+
+        try:
+            with self.path.open(encoding="utf-8") as handle:
+                data = json.load(handle)
+        except Exception as e:
+            yield RowResult(
+                source_line=1,
+                error=f"Falha ao ler ou parsear o JSON: {e}",
+            )
+            return
+
+        if not isinstance(data, list):
+            yield RowResult(
+                source_line=1,
+                error="O JSON de jogadores deve ser uma lista de objetos.",
+            )
+            return
+
+        for line, row in enumerate(data, start=1):
+            if not isinstance(row, dict):
+                yield RowResult(
+                    source_line=line,
+                    error="O registro do jogador não é um objeto JSON válido.",
+                )
+                continue
+
+            # Mapeia as chaves usando normalize_header
+            norm_row = {}
+            for k, v in row.items():
+                norm_k = normalize_header(k)
+                if norm_k:
+                    norm_row[norm_k] = v
+
+            player_id = norm_row.get("player_id")
+            if player_id is not None:
+                player_id = str(player_id).strip()
+
+            if not player_id:
+                yield RowResult(
+                    source_line=line,
+                    error="Registro sem identificador do jogador.",
+                )
+                continue
+
+            # Extrai cores e estilos (suportando tanto color_1/color_2 quanto listas colors/cores)
+            def extract_list_or_val(val: any) -> list[str]:
+                if val is None:
+                    return []
+                if isinstance(val, list):
+                    return [str(x).strip() for x in val if x]
+                if isinstance(val, str):
+                    s = val.strip()
+                    return [s] if s else []
+                return [str(val).strip()]
+
+            colors_list = []
+            for k in ["colors", "cores"]:
+                if k in row:
+                    colors_list.extend(extract_list_or_val(row[k]))
+            if not colors_list:
+                c1 = extract_list_or_val(norm_row.get("color_1"))
+                c2 = extract_list_or_val(norm_row.get("color_2"))
+                colors_list = c1 + c2
+            colors = tuple(colors_list)
+
+            styles_list = []
+            for k in ["styles", "estilos"]:
+                if k in row:
+                    styles_list.extend(extract_list_or_val(row[k]))
+            if not styles_list:
+                s1 = extract_list_or_val(norm_row.get("style_1"))
+                s2 = extract_list_or_val(norm_row.get("style_2"))
+                styles_list = s1 + s2
+            styles = tuple(styles_list)
+
+            def clean_json_text(val: any) -> str:
+                if val is None:
+                    return ""
+                return str(val).strip()
+
+            profile = PlayerProfile(
+                player_id=player_id,
+                personality=clean_json_text(norm_row.get("personality")),
+                species=clean_json_text(norm_row.get("species")),
+                hobby=clean_json_text(norm_row.get("hobby")),
+                colors=colors,
+                styles=styles,
+            )
+            yield RowResult(source_line=line, profile=profile)

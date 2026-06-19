@@ -102,3 +102,75 @@ class CsvVillagerRepository(VillagerRepository):
             style_2=clean_text(data.get("style_2")),
             gender=clean_text(data.get("gender")),
         )
+
+
+class JsonVillagerRepository(VillagerRepository):
+    """Lê o catálogo de villagers de um arquivo JSON.
+
+    Os objetos do JSON podem usar chaves correspondentes aos nomes canônicos
+    ou apelidos normalizados (PT/EN, sem caixa/acentos).
+    """
+
+    def __init__(self, path: str | Path) -> None:
+        """Inicializa o repositório com o caminho do JSON.
+
+        Args:
+            path (str | Path): Caminho do arquivo JSON de villagers.
+        """
+        self.path = Path(path)
+
+    def load_all(self) -> list[Villager]:
+        import json
+
+        villagers: list[Villager] = []
+        with self.path.open(encoding="utf-8") as handle:
+            data = json.load(handle)
+            if not isinstance(data, list):
+                raise ValueError(
+                    "O JSON de villagers deve ser uma lista de objetos."
+                )
+            for row in data:
+                if not isinstance(row, dict):
+                    continue
+                villager = self._build_villager(row)
+                if villager is not None:
+                    villagers.append(villager)
+        return villagers
+
+    def _build_villager(self, row: dict[str, any]) -> Villager | None:
+        """Constrói um villager a partir de um dicionário JSON.
+
+        Args:
+            row (dict[str, any]): Dicionário JSON do villager.
+
+        Returns:
+            Villager | None: O villager correspondente ou None se não tiver nome.
+        """
+        data: dict[str, str] = {}
+        for column, value in row.items():
+            key = normalize_header(column)
+            if key:
+                if value is None:
+                    data[key] = ""
+                elif isinstance(value, list):
+                    data[key] = ", ".join(
+                        str(v).strip() for v in value if v is not None
+                    )
+                else:
+                    data[key] = str(value).strip()
+
+        name = clean_text(data.get("name"))
+        if not name:
+            return None
+        return Villager(
+            name=name,
+            species=clean_text(data.get("species")),
+            personality=clean_text(data.get("personality")),
+            hobby=clean_text(data.get("hobby")),
+            birthday=clean_text(data.get("birthday")),
+            color_1=clean_text(data.get("color_1")),
+            color_2=clean_text(data.get("color_2")),
+            style_1=clean_text(data.get("style_1")),
+            style_2=clean_text(data.get("style_2")),
+            gender=clean_text(data.get("gender")),
+        )

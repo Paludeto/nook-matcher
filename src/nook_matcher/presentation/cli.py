@@ -13,12 +13,15 @@ from nook_matcher.domain.recommender import KNNRecommender
 from nook_matcher.domain.similarity import WeightedOverlapSimilarity
 from nook_matcher.infrastructure.output_writer import (
     CsvRecommendationWriter,
+    JsonRecommendationWriter,
 )
 from nook_matcher.infrastructure.player_source import (
     CsvPlayerProfileReader,
+    JsonPlayerProfileReader,
 )
 from nook_matcher.infrastructure.repositories import (
     CsvVillagerRepository,
+    JsonVillagerRepository,
 )
 
 _DEFAULT_TOP_N = 10
@@ -45,14 +48,14 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--input",
         required=True,
-        metavar="JOGADORES_CSV",
-        help="CSV com perfis dos jogadores.",
+        metavar="JOGADORES_ARQUIVO",
+        help="CSV ou JSON com perfis dos jogadores.",
     )
     parser.add_argument(
         "--villagers",
         default=str(_DEFAULT_VILLAGERS),
-        metavar="VILLAGERS_CSV",
-        help=f"CSV com dados dos villagers (padrão: {_DEFAULT_VILLAGERS}).",
+        metavar="VILLAGERS_ARQUIVO",
+        help=f"CSV ou JSON com dados dos villagers (padrão: {_DEFAULT_VILLAGERS}).",
     )
     parser.add_argument(
         "--top-n",
@@ -83,10 +86,10 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--output",
-        metavar="CSV",
+        metavar="ARQUIVO_SAIDA",
         help=(
-            "Caminho do CSV de saída. Se omitido, gera "
-            f"{_DEFAULT_OUTPUT_DIR}/recomendacoes_<timestamp>.csv."
+            "Caminho do CSV ou JSON de saída. Se omitido, gera "
+            f"{_DEFAULT_OUTPUT_DIR}/recomendacoes_<timestamp>.[csv|json]."
         ),
     )
     parser.add_argument(
@@ -94,7 +97,7 @@ def _build_parser() -> argparse.ArgumentParser:
         default=_DEFAULT_OUTPUT_DIR,
         metavar="DIR",
         help=(
-            "Pasta do CSV quando --output não é informado "
+            "Pasta do arquivo de saída quando --output não é informado "
             f"(padrão: {_DEFAULT_OUTPUT_DIR})."
         ),
     )
@@ -102,7 +105,7 @@ def _build_parser() -> argparse.ArgumentParser:
 
 
 def _resolve_output_path(args: argparse.Namespace) -> Path:
-    """Determina o caminho do CSV de saída a partir dos argumentos.
+    """Determina o caminho do arquivo de saída a partir dos argumentos.
 
     Usa ``--output`` quando informado; caso contrário, gera um nome com
     timestamp dentro de ``--output-dir`` para preservar execuções
@@ -112,12 +115,13 @@ def _resolve_output_path(args: argparse.Namespace) -> Path:
         args (argparse.Namespace): Argumentos já parseados.
 
     Returns:
-        Path: Caminho do arquivo CSV a ser escrito.
+        Path: Caminho do arquivo a ser escrito.
     """
     if args.output:
         return Path(args.output)
+    ext = "json" if Path(args.input).suffix.lower() == ".json" else "csv"
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    return Path(args.output_dir) / f"recomendacoes_{timestamp}.csv"
+    return Path(args.output_dir) / f"recomendacoes_{timestamp}.{ext}"
 
 
 def _format_recommendation(rank: int, rec, max_factors: int) -> str:
@@ -204,8 +208,16 @@ def main(argv: list[str] | None = None) -> None:
     if args.top_n <= 0:
         sys.exit("--top-n deve ser maior que zero.")
 
-    villager_repo = CsvVillagerRepository(villagers_path)
-    player_reader = CsvPlayerProfileReader(input_path)
+    if villagers_path.suffix.lower() == ".json":
+        villager_repo = JsonVillagerRepository(villagers_path)
+    else:
+        villager_repo = CsvVillagerRepository(villagers_path)
+
+    if input_path.suffix.lower() == ".json":
+        player_reader = JsonPlayerProfileReader(input_path)
+    else:
+        player_reader = CsvPlayerProfileReader(input_path)
+
     strategy = WeightedOverlapSimilarity()
     recommender = KNNRecommender(
         strategy=strategy,
@@ -221,7 +233,10 @@ def main(argv: list[str] | None = None) -> None:
     _print_batch_result(batch_result, max_factors=args.max_factors)
 
     output_path = _resolve_output_path(args)
-    writer = CsvRecommendationWriter(output_path, max_factors=args.max_factors)
+    if output_path.suffix.lower() == ".json":
+        writer = JsonRecommendationWriter(output_path, max_factors=args.max_factors)
+    else:
+        writer = CsvRecommendationWriter(output_path, max_factors=args.max_factors)
     written = writer.write(batch_result)
     print(f"\nRecomendações exportadas para: {written}")
 
